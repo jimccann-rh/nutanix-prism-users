@@ -1,0 +1,80 @@
+---
+- name: get info prism central
+  hosts: all 
+  gather_facts: true
+
+
+  vars:
+    api_url_v3: "https://{{ prism_url }}:9440/api/nutanix/v3"
+    prism_url: "{{ env }}"
+    api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
+    update_prism_admin_str: 'dpp/data/nutanix/prism/central:username'
+    update_prism_password_str: 'dpp/data/nutanix/prism/central:password'
+    update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist:{{ env }}'
+    #update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist/ltsdev:userlist'
+    hv_credential_string: "auth_method=approle url={{ hvurl }} role_id={{ dpp_hcv_role_id }} secret_id={{ dpp_hcv_secret_id }}"
+    hvurl: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ADDR') }}"
+    dpp_hcv_role_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ROLE_ID') }}"
+    dpp_hcv_secret_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_SECRET_ID') }}"
+
+  pre_tasks:
+
+    - name: Reset facts if assumed element
+      ansible.builtin.set_fact:
+        update_prism_admin_str: 'dpp/data/nutanix/prism/element:username'
+        update_prism_password_str: 'dpp/data/nutanix/prism/element:password'
+      delegate_to: localhost
+      when: "central" not in prism_url 
+
+    - name: Set facts
+      ansible.builtin.set_fact:
+        prism_user: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
+        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
+        userslist: "{{ lookup('community.general.hashi_vault',  update_prism_userslist_str + ' ' + hv_credential_string) }}"
+      no_log: true
+      delegate_to: localhost
+
+#    - name: include vars and vault for env
+#      include_vars: "{{ item }}.yml"
+#      loop:
+#        - "/config/{{ env }}"
+#        - "/secret/{{ env }}.vault"
+
+  tags:
+    - debugs
+
+  tasks:
+    - name: Auths to the cluster
+      uri:
+        url: "{{ api_url_v1 }}/users"
+        method: GET
+        validate_certs: false
+        force_basic_auth: true
+        body_format: json
+        user: "{{ prism_user }}"
+        password: "{{ prism_password }}"
+        status_code: 200
+        return_content: true
+      register: login
+      delegate_to: localhost
+      no_log: true
+
+    - name: Sets fact for session cookie
+      set_fact:
+        session_cookie: "{{ login.set_cookie }}"
+
+    - name: Gets user metadata from its name
+      set_fact:
+        user_entities: "{{ login.json }}"
+    #       vm_entities: '{{ login.json.profiles }}'
+
+    - name: What type of prism systems element or central
+      debug:
+        msg: "Type of prism is {{ login.x_ntnx_env }}"
+
+    - name: loop users
+      include_tasks: users.yml
+      loop: "{{ userslist }}"
+      loop_control:
+        label: "{{ lu.username }}"
+        loop_var: lu

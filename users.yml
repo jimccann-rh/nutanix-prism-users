@@ -1,0 +1,72 @@
+---
+- name: set fact for user
+  set_fact:
+    userexist: false
+
+- name: set fact for user
+  set_fact:
+    userexist: true
+  loop: "{{ user_entities }}"
+  when: lu.username in item.profile.username
+
+- name: set default password for user
+  set_fact:
+    setpass: "Changeme#{{ ansible_date_time.year }}{{ ansible_date_time.month }}"
+
+- name: set default password for user
+  set_fact:
+    defaultpass: "{{ lu.password | default(setpass, true) }}"
+
+- name: A default PASSWORD for user "{{ lu.username }}" was created value below
+  debug:
+    msg: "{{ defaultpass }}"
+  when: not userexist and lu.password | length == 0
+#  when: not userexist and lu.password == ""
+
+- name: Create user "{{ lu.username }}"
+  uri:
+    url: "{{ api_url_v1 }}/users"
+    method: POST
+    validate_certs: false
+    body_format: json
+    body: '{"profile":{"username":"{{ lu.username }}","firstName":"{{ lu.firstName }}","lastName":"{{ lu.lastName }}","emailId":"{{ lu.emailId }}","password":"{{ defaultpass }}","locale":"en-US"},"mode":"Create","enabled":false,"roles":[]}'
+    status_code: 200
+    headers:
+      Cookie: "{{ session_cookie }}"
+    force_basic_auth: yes
+  delegate_to: localhost
+  register: create_user
+  when: not userexist
+  no_log: true
+
+- name: set default role pe
+  set_fact:
+    bodyrole: '["ROLE_CLUSTER_VIEWER", "ROLE_CLUSTER_ADMIN", "ROLE_BACKUP_ADMIN"]'
+  when: login.x_ntnx_env == "pe"
+
+- name: set default role pc
+  set_fact:
+    bodyrole: '["ROLE_CLUSTER_VIEWER", "ROLE_MULTICLUSTER_ADMIN"]'
+  when: login.x_ntnx_env == "pc"
+
+- name: add role to "{{ lu.username }}"
+  uri:
+    url: "{{ api_url_v1 }}/users/{{ lu.username }}/roles"
+    method: PUT
+    validate_certs: false
+    body_format: json
+    body: "{{ bodyrole }}"
+    #    body: '["ROLE_MULTICLUSTER_ADMIN", "ROLE_CLUSTER_VIEWER", "ROLE_CLUSTER_ADMIN", "ROLE_BACKUP_ADMIN"]'
+    #    body: '["ROLE_MULTICLUSTER_ADMIN", "ROLE_CLUSTER_VIEWER"]'
+    status_code: 200
+    headers:
+      Cookie: "{{ session_cookie }}"
+    force_basic_auth: yes
+  delegate_to: localhost
+  register: role_user
+  when: not userexist
+
+- name: User already exist
+  debug:
+    msg: "User {{ lu.username }} is already in Prism no changes made"
+  when: userexist
