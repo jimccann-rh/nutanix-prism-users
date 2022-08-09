@@ -46,6 +46,10 @@
     - debugs
 
   tasks:
+    - name: show info
+      debug:
+        msg: "{{ prism_user }} {{ env }} {{ prism_url }}"
+    
     - name: Auths to the cluster
       uri:
         url: "{{ api_url_v1 }}/users"
