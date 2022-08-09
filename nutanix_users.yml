@@ -1,6 +1,8 @@
 ---
 - name: get info prism central
-  hosts: all 
+#  hosts: all 
+  hosts: localhost
+  connection: local 
   gather_facts: true
 
 
