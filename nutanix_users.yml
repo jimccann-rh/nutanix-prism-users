@@ -36,6 +36,9 @@
 ##        userslist: "{{ lookup('community.general.hashi_vault',  update_prism_userslist_str + ' ' + hv_credential_string) }}"
 #      no_log: true
 
+    - name: show info
+      debug:
+        msg: "{{ update_prism_userslist_str }}"
 
   tags:
     - debugs
@@ -62,11 +65,11 @@
         force_basic_auth: true
         body_format: json
         user: "{{ prism_user }}"
-#        password: "{{ prism_password }}"
+        password: "{{ prism_password }}"
         status_code: 200
         return_content: true
       register: login
-#      no_log: true
+      no_log: true
 
     - name: Sets fact for session cookie
       set_fact:
