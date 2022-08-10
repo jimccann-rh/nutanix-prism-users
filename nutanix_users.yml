@@ -13,7 +13,6 @@
     update_prism_admin_str: 'dpp/data/nutanix/prism/central:username'
     update_prism_password_str: 'dpp/data/nutanix/prism/central:password'
     update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist:{{ env }}'
-    #update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist/ltsdev:userlist'
     hv_credential_string: "auth_method=approle url={{ hvurl }} role_id={{ dpp_hcv_role_id }} secret_id={{ dpp_hcv_secret_id }}"
     hvurl: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ADDR') }}"
     dpp_hcv_role_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ROLE_ID') }}"
@@ -25,16 +24,8 @@
       ansible.builtin.set_fact:
         update_prism_admin_str: 'dpp/data/nutanix/prism/element:username'
         update_prism_password_str: 'dpp/data/nutanix/prism/element:password'
-#        prism_url: "{{ env | replace('central','') }}"
         update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist:{{ env | replace("prism","prismcentral") }}'
       when: '"central" not in prism_url '
-
-#    - name: Set facts
-#      ansible.builtin.set_fact:
-#        prism_user: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
-#        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
-##        userslist: "{{ lookup('community.general.hashi_vault',  update_prism_userslist_str + ' ' + hv_credential_string) }}"
-#      no_log: true
 
     - name: show info
       debug:
