@@ -25,6 +25,8 @@
       ansible.builtin.set_fact:
         update_prism_admin_str: 'dpp/data/nutanix/prism/element:username'
         update_prism_password_str: 'dpp/data/nutanix/prism/element:password'
+#        prism_url: "{{ env | replace('central','') }}"
+        update_prism_userslist_str: 'dpp/data/nutanix/prism/userslist:{{ env | replace("prism","prismcentral") }}'
       when: '"central" not in prism_url '
 
 #    - name: Set facts
