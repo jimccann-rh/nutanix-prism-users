@@ -25,22 +25,15 @@
       ansible.builtin.set_fact:
         update_prism_admin_str: 'dpp/data/nutanix/prism/element:username'
         update_prism_password_str: 'dpp/data/nutanix/prism/element:password'
-#      delegate_to: localhost
       when: '"central" not in prism_url '
 
     - name: Set facts
       ansible.builtin.set_fact:
         prism_user: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
-        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
-        userslist: "{{ lookup('community.general.hashi_vault',  update_prism_userslist_str + ' ' + hv_credential_string) }}"
-      no_log: true
-#      delegate_to: localhost
+#        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
+#        userslist: "{{ lookup('community.general.hashi_vault',  update_prism_userslist_str + ' ' + hv_credential_string) }}"
+#      no_log: true
 
-#    - name: include vars and vault for env
-#      include_vars: "{{ item }}.yml"
-#      loop:
-#        - "/config/{{ env }}"
-#        - "/secret/{{ env }}.vault"
 
   tags:
     - debugs
@@ -62,7 +55,6 @@
         status_code: 200
         return_content: true
       register: login
-#      delegate_to: localhost
       no_log: true
 
     - name: Sets fact for session cookie
@@ -72,7 +64,6 @@
     - name: Gets user metadata from its name
       set_fact:
         user_entities: "{{ login.json }}"
-    #       vm_entities: '{{ login.json.profiles }}'
 
     - name: What type of prism systems element or central
       debug:
@@ -84,4 +75,3 @@
       loop_control:
         label: "{{ lu.username }}"
         loop_var: lu
-#      no_log: true
