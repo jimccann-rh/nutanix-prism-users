@@ -34,7 +34,7 @@
     headers:
       Cookie: "{{ session_cookie }}"
     force_basic_auth: yes
-  delegate_to: localhost
+#  delegate_to: localhost
   register: create_user
   when: not userexist
   no_log: true
@@ -62,7 +62,7 @@
     headers:
       Cookie: "{{ session_cookie }}"
     force_basic_auth: yes
-  delegate_to: localhost
+#  delegate_to: localhost
   register: role_user
   when: not userexist
 
