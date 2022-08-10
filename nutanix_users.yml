@@ -84,4 +84,4 @@
       loop_control:
         label: "{{ lu.username }}"
         loop_var: lu
-      no_log: true
+#      no_log: true
